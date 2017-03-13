@@ -73,6 +73,13 @@ class Esp8266Skill(MycroftSkill):
                 for ws_connect in self.ws:
                     ws_connect.send(esp_mdl_name + "-" + cmd_name)
                     LOGGER.info(esp_mdl_name + "-" + cmd_name)
+            if (self.protocol == "mqtt"):
+                mqttc = mqtt.Client("MycroftAI")
+                if (self.mqtt_auth == "yes"):
+                    mqttc.username_pw_set(self.mqtt_user, self.mqtt_pass)
+                mqttc.connect(self.mqtt_host, self.mqtt_port)
+                mqttc.publish() #TODO : fill the publish part
+                mqttc.disconnect()
             else:
                 to_esp = esp_mdl_name + "?cmd=" + cmd_name
                 # exemple : http://esp8266.local/led0?cmd=turn_on
