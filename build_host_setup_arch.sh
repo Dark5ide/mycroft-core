@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-sudo pacman -S \
+sudo pacman -S --needed \
     git \
     python2 \
     python2-pip \
     python2-setuptools \
     python2-virtualenv \
     python2-gobject \
-    python2-virtualenvwrapper \
+    python-virtualenvwrapper \
     libtool \
     libffi \
     openssl \
