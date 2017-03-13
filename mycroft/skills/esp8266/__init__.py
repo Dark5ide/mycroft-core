@@ -72,13 +72,12 @@ class Esp8266Skill(MycroftSkill):
                     self.ws = [create_connection("ws://" + u + ":81/") for u in self.esp_units]
                 for ws_connect in self.ws:
                     ws_connect.send(esp_mdl_name + "-" + cmd_name)
-                    LOGGER.info(esp_mdl_name + "-" + cmd_name)
-            if (self.protocol == "mqtt"):
+            elif (self.protocol == "mqtt"):
                 mqttc = mqtt.Client("MycroftAI")
                 if (self.mqtt_auth == "yes"):
-                    mqttc.username_pw_set(self.mqtt_user, self.mqtt_pass)
-                mqttc.connect(self.mqtt_host, self.mqtt_port)
-                mqttc.publish() #TODO : fill the publish part
+                    mqttc.username_pw_set(username=str(self.mqtt_user), password=str(self.mqtt_pass))
+                mqttc.connect(host=str(self.mqtt_host), port=self.mqtt_port)
+                mqttc.publish("/mycroft/" + esp_mdl_name, cmd_name)
                 mqttc.disconnect()
             else:
                 to_esp = esp_mdl_name + "?cmd=" + cmd_name
