@@ -32,10 +32,10 @@ class Esp8266Skill(MycroftSkill):
 
     def __init__(self):
         super(Esp8266Skill, self).__init__(name="Esp8266Skill")
-        self.esp_units = self.config["units"]
-        if type(self.esp_units) == str:
+        self.esp_units = self.config.get("units")
+        if type(self.esp_units) == unicode:
             self.esp_units = [self.esp_units]
-        self.protocol = self.config["protocol"]
+        self.protocol = self.config.get("protocol")
         self.ws = None
     
     def initialize(self):
@@ -48,9 +48,9 @@ class Esp8266Skill(MycroftSkill):
         self.register_intent(intent, self.handle_single_command)
         
     def handle_single_command(self, message):
-        cmd_name = message.metadata.get("CommandKeyword")
-        mdl_name = message.metadata.get("ModuleKeyword")
-        act_name = message.metadata.get("ActionKeyword")
+        cmd_name = message.data.get("CommandKeyword")
+        mdl_name = message.data.get("ModuleKeyword")
+        act_name = message.data.get("ActionKeyword")
         esp_mdl_name = mdl_name.replace(' ', '_')
         
         if act_name:
