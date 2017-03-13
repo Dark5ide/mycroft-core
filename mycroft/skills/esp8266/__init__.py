@@ -23,6 +23,7 @@ from mycroft.util.log import getLogger
 
 from urllib2 import urlopen
 from websocket import create_connection
+import paho.mqtt.client as mqtt
 
 __author__ = 'Dark5ide'
 
@@ -36,12 +37,21 @@ class Esp8266Skill(MycroftSkill):
         if type(self.esp_units) == unicode:
             self.esp_units = [self.esp_units]
         self.protocol = self.config.get("protocol")
+        
+        # websocket parameter
         self.ws = None
+        self.ws_port = self.config.get("ws-port")
+        
+        # mqtt parameter
+        self.mqtt_host = self.config.get("mqtt-host")
+        self.mqtt_port = self.config.get("mqtt-port")
+        self.mqtt_auth = self.config.get("mqtt-auth")
+        self.mqtt_user = self.config.get("mqtt-user")
+        self.mqtt_pass = self.config.get("mqtt-pass")    
     
     def initialize(self):
         self.load_data_files(dirname(__file__))
-        self. __build_single_command()
-        
+        self. __build_single_command()        
         
     def __build_single_command(self):
         intent = IntentBuilder("Esp8266CmdIntent").require("CommandKeyword").require("ModuleKeyword").optionally("ActionKeyword").build()
