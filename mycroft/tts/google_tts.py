@@ -1,38 +1,31 @@
-# Copyright 2016 Mycroft AI, Inc.
+# Copyright 2017 Mycroft AI Inc.
 #
-# This file is part of Mycroft Core.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# Mycroft Core is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+#    http://www.apache.org/licenses/LICENSE-2.0
 #
-# Mycroft Core is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
-# You should have received a copy of the GNU General Public License
-# along with Mycroft Core.  If not, see <http://www.gnu.org/licenses/>.
-
-
 from gtts import gTTS
 
 from mycroft.tts import TTS, TTSValidator
-from mycroft.util import play_mp3
-
-__author__ = 'jdorleans'
 
 
 class GoogleTTS(TTS):
     def __init__(self, lang, voice):
         super(GoogleTTS, self).__init__(lang, voice, GoogleTTSValidator(self))
+        self.type = 'mp3'
 
-    def execute(self, sentence):
+    def get_tts(self, sentence, wav_file):
         tts = gTTS(sentence, self.lang)
-        tts.save(self.filename)
-        p = play_mp3(self.filename)
-        p.communicate()  # Wait for termination
+        tts.save(wav_file)
+        return (wav_file, None)  # No phonemes
 
 
 class GoogleTTSValidator(TTSValidator):

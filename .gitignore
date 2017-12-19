@@ -14,3 +14,12 @@ MANIFEST.in
 setup.py
 scripts/logs/*
 logs/*
+.coverage
+mycroft/audio-accuracy-test/data/*
+scripts/*.screen
+doc/_build/
+.installed
+
+# Created by unit tests
+test/unittests/skills/test_skill/settings.json
+test_conf.json

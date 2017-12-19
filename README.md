@@ -1,131 +1,140 @@
-Mycroft [![Build Status](https://travis-ci.org/MycroftAI/mycroft-core.svg?branch=master)](https://travis-ci.org/MycroftAI/mycroft-core)
+Mycroft [![Build Status](https://travis-ci.org/MycroftAI/mycroft-core.svg?branch=master)](https://travis-ci.org/MycroftAI/mycroft-core) [![Coverage Status](https://coveralls.io/repos/github/MycroftAI/mycroft-core/badge.svg?branch=dev)](https://coveralls.io/github/MycroftAI/mycroft-core?branch=dev)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 ==========
 
-Full docs at: https://docs.mycroft.ai
+Mycroft is a hackable open source voice assistant.
 
-Release notes at: https://docs.mycroft.ai/release-notes
+# Table of Contents
 
-Pair Mycroft instance at: https://home.mycroft.ai
+- [Table of Contents](#table-of-contents)
+- [Getting Started](#getting-started)
+- [Running Mycroft](#running-mycroft)
+- [Using Mycroft](#using-mycroft)
+  * [*Home* Device and Account Manager](#home-device-and-account-manager)
+  * [Skills](#skills)
+- [Behind the scenes](#behind-the-scenes)
+  * [Pairing Information](#pairing-information)
+  * [Configuration](#configuration)
+  * [Using Mycroft Without Home](#using-mycroft-without-home)
+  * [API Key Services](#api-key-services)
+  * [Using Mycroft behind a proxy](#using-mycroft-behind-a-proxy)
+    + [Using Mycroft behind a proxy without authentication](#using-mycroft-behind-a-proxy-without-authentication)
+    + [Using Mycroft behind an authenticated proxy](#using-mycroft-behind-an-authenticated-proxy)
+- [Getting Involved](#getting-involved)
+- [Links](#links)
 
-Join the Mycroft Slack(chat) channel: http://mycroft-ai-slack-invite.herokuapp.com/
+# Getting Started
 
-Looking to join in developing?  Check out the [Project Wiki](../../wiki/Home) for tasks you can tackle!
+First, get the code on your system!  The simplest method is via git ([git installation instructions](https://gist.github.com/derhuerst/1b15ff4652a867391f03)):
+- `cd ~/`
+- `git clone https://github.com/MycroftAI/mycroft-core.git`
+- `cd mycroft-core`
+- `bash dev_setup.sh`
 
-# Getting Started in Ubuntu - Development Environment
-- run `build_host_setup.sh` (installs debian packages with apt-get, please read it) 
-- run `dev_setup.sh` (feel free to read it, as well)
-- Restart session (reboot computer, or logging out and back in might work).
+This script sets up dependencies and a [virtualenv][about-virtualenv].  If running in an environment besides Ubuntu/Debian, Arch or Fedora you may need to manually install packages as instructed by dev_setup.sh.
 
-# Getting Started in other environments
+[about-virtualenv]:https://virtualenv.pypa.io/en/stable/
 
-The following packages are required for setting up the development environment,
- and are what is installed by `build_host_setup.sh`
+NOTE: The default branch for this repository is 'dev', which should be considered a work-in-progress. If you want to clone a more stable version, switch over to the 'master' branch.
 
- - `git`
- - `python 2`
- - `python-setuptools`
- - `python-virtualenv`
- - `pygobject`
- - `virtualenvwrapper`
- - `libtool`
- - `libffi`
- - `openssl`
- - `autoconf`
- - `bison`
- - `swig`
- - `glib2.0`
- - `s3cmd`
- - `portaudio19`
- - `mpg123`
- - `flac`
- - `curl`
+# Running Mycroft
 
-## Home Device and Account Manager
-Mycroft AI, Inc. - the company behind Mycroft maintains the Home device and account management system. Developers can sign up at https://home.mycroft.ai
+Mycroft provides `start-mycroft.sh` to perform common tasks. This script uses a virtualenv created by `dev_setup.sh`.  Assuming you installed mycroft-core in your home directory run:
+- `cd ~/mycroft-core`
+- `./start-mycroft.sh debug`
 
-By default the Mycroft software is configured to use Home, upon any request such as "Hey Mycroft, what is the weather?", you will be informed that you need to pair and Mycroft will speak a 6-digit code, which you enter into the pairing page on the [Home site](https://home.mycroft.ai).
+The "debug" command will start the background services (microphone listener, skill, messagebus, and audio subsystems) as well as bringing up a text-based Command Line Interface (CLI) you can use to interact with Mycroft and see the contents of the various logs. Alternatively you can run `./start-mycroft.sh all` to begin the services without the command line interface.  Later you can bring up the CLI using `./start-mycroft.sh cli`.
 
-Once signed and a device is paired, the unit will use our API keys for services, such as the STT (Speech-to-Text) API. It also allows you to use our API keys for weather, Wolfram-Alpha, and various other skills.
+The background services can be stopped as a group with:
+- `./stop-mycroft.sh`
 
+# Using Mycroft
+
+## *Home* Device and Account Manager
+Mycroft AI, Inc. maintains a device and account management system known as Mycroft Home. Developers may sign up at: https://home.mycroft.ai
+
+By default, mycroft-core  is configured to use Home. By saying "Hey Mycroft, pair my device" (or any other request verbal request) you will be informed that your device needs to be paired. Mycroft will speak a 6-digit code which you can entered into the pairing page within the [Mycroft Home site](https://home.mycroft.ai).
+
+Once paired, your unit will use Mycroft API keys for services such as Speech-to-Text (STT), weather and various other skills.
+
+## Skills
+
+Mycroft is nothing without skills.  There are a handful of default skills that are downloaded automatically to your `/opt/mycroft/skills` directory, but most need to be installed explicitly.  See the [Skill Repo](https://github.com/MycroftAI/mycroft-skills#welcome) to discover skills made by others.  And please share your own interesting work!
+
+# Behind the scenes
+
+## Pairing Information
 Pairing information generated by registering with Home is stored in:
-
 `~/.mycroft/identity/identity2.json` <b><-- DO NOT SHARE THIS WITH OTHERS!</b>
 
-It's useful to know the location of the identity file when troubleshooting device pairing issues.
+## Configuration
+Mycroft configuration consists of 4 possible locations:
+- `mycroft-core/mycroft/configuration/mycroft.conf`(Defaults)
+- [Mycroft Home](https://home.mycroft.ai) (Remote)
+- `/etc/mycroft/mycroft.conf`(Machine)
+- `$HOME/.mycroft/mycroft.conf`(User)
 
-## Using Mycroft without Home.
-If you do not wish to use our service, you may insert your own API keys into the configuration files listed below in <b>configuration</b>.
+When the configuration loader starts, it looks in these locations in this order, and loads ALL configurations. Keys that exist in multiple configuration files will be overridden by the last file to contain the value. This process results in a minimal amount being written for a specific device and user, without modifying default distribution files.
+
+## Using Mycroft Without Home
+
+If you do not wish to use the Mycroft Home service, you may insert your own API keys into the configuration files listed below in <b>configuration</b>.
 
 The place to insert the API key looks like the following:
 
 `[WeatherSkill]`
-
 `api_key = ""`
 
-Put the relevant key in between the quotes and Mycroft Core should begin to use the key immediately.
+Put a relevant key inside the quotes and mycroft-core should begin to use the key immediately.
 
-### API Key services
+## API Key Services
 
-- [STT API, Google STT](http://www.chromium.org/developers/how-tos/api-keys)
+These are the keys currently used in Mycroft Core:
+
+- [STT API, Google STT, Google Cloud Speech](http://www.chromium.org/developers/how-tos/api-keys)
 - [Weather Skill API, OpenWeatherMap](http://openweathermap.org/api)
 - [Wolfram-Alpha Skill](http://products.wolframalpha.com/api/)
 
-These are the keys currently in use in Mycroft Core.
+## Using Mycroft behind a proxy
 
-## Configuration
-Mycroft configuration consists of 3 possible config files.
-- `mycroft-core/mycroft/configuration/mycroft.conf`
-- `/etc/mycroft/mycroft.conf`
-- `$HOME/.mycroft/mycroft.conf`
+Many schools, universities and workplaces run a `proxy` on their network. If you need to type in a username and password to access the external internet, then you are likely behind a `proxy`.
 
-When the configuration loader starts, it looks in those locations in that order, and loads ALL configuration. Keys that exist in multiple config files will be overridden by the last file to contain that config value. This results in a minimal amount of config being written for a specific device/user, without modifying the distribution files.
+If you plan to use Mycroft behind a proxy, then you will need to do an additional configuration step.
 
-# Running Mycroft Quick Start
-To start the essential tasks run `./mycroft.sh start`. Which will start the service, skills, voice and cli (using --quiet mode) in a detched screen and log the output of the screens to the their respective log files (e.g. ./log/mycroft-service.log).
-Optionally you can run `./mycroft.sh start -v` Which will start the service, skills and voice. Or `./mycroft.sh start -c` Which will start the service, skills and cli.
+_NOTE: In order to complete this step, you will need to know the `hostname` and `port` for the proxy server. Your network administrator will be able to provide these details. Your network administrator may want information on what type of traffic Mycroft will be using. We use `https` traffic on port `443`, primarily for accessing ReST-based APIs._
 
-To stop Mycroft run `./mycroft.sh stop`. This will quit all of the detached screens.
-To restart Mycroft run './mycroft.sh restart`.
+### Using Mycroft behind a proxy without authentication
 
-Quick screen tips
-- run `screen -list` to see all running screens
-- run `screen -r [screen-name]` (e.g. `screen -r mycroft-service`) to reatach a screen
-- to detach a running screen press `ctrl + a, ctrl + d`
-See the screen man page for more details 
+If you are using Mycroft behind a proxy without authentication, add the following environment variables, changing the `proxy_hostname.com` and `proxy_port` for the values for your network. These commands are executed from the Linux command line interface (CLI).
 
-# Running Mycroft
-## With `start.sh`
-Mycroft provides `start.sh` to run a large number of common tasks. This script uses the virtualenv created by `dev_setup.sh`. The usage statement lists all run targets, but to run a Mycroft stack out of a git checkout, the following processes should be started:
-
-- run `./start.sh service`
-- run `./start.sh skills`
-- run `./start.sh voice`
-
-*Note: The above scripts are blocking, so each will need to be run in a separate terminal session.*
-
-## Without `start.sh`
-
-Activate your virtualenv.
-
-With virtualenv-wrapper:
-```
-workon mycroft
+```bash
+$ export http_proxy=http://proxy_hostname.com:proxy_port
+$ export https_port=http://proxy_hostname.com:proxy_port
+$ export no_proxy="localhost,127.0.0.1,localaddress,.localdomain.com,0.0.0.0,::1"
 ```
 
-Without virtualenv-wrapper:
+### Using Mycroft behind an authenticated proxy
+
+If  you are behind a proxy which requires authentication, add the following environment variables, changing the `proxy_hostname.com` and `proxy_port` for the values for your network. These commands are executed from the Linux command line interface (CLI).
+
+```bash
+$ export http_proxy=http://user:password@proxy_hostname.com:proxy_port
+$ export https_port=http://user:password@proxy_hostname.com:proxy_port
+$ export no_proxy="localhost,127.0.0.1,localaddress,.localdomain.com,0.0.0.0,::1"
 ```
-source ~/.virtualenvs/mycroft/bin/activate
-```
 
+# Getting Involved
 
-- run `PYTHONPATH=. python client/speech/main.py` # the main speech detection loop, which prints events to stdout and broadcasts them to a message bus
-- run `PYTHONPATH=. python client/messagebus/service/main.py` # the main message bus, implemented via web sockets
-- run `PYTHONPATH=. python client/skills/main.py` # main skills executable, loads all skills under skills dir
+This is an open source project and we would love your help. We have prepared a [contributing](./CONTRIBUTING.md) guide to help you get started.
 
-*Note: The above scripts are blocking, so each will need to be run in a separate terminal session. Each terminal session will require that the virtualenv be activated. There are very few reasons to use this method.*
+If this is your first PR or you're not sure where to get started,
+say hi in [Mycroft Chat](https://chat.mycroft.ai/) and a team member would be happy to mentor you.
+Join the [Mycroft Forum](https://community.mycroft.ai/) for questions and answers.
 
-# FAQ/Common Errors
-
-#### When running mycroft, I get the error `mycroft.messagebus.client.ws - ERROR - Exception("Uncaught 'error' event.",)`
-
-This means that you are not running the `./start.sh service` process. In order to fully run Mycroft, you must run `./start.sh service`, `./start.sh skills`, and `./start.sh voice`/`./start.sh cli` all at the same time. This can be done using different terminal windows, or by using the included `./mycroft.sh start`, which runs all four process using `screen`.
+# Links
+* [Creating a Skill](https://docs.mycroft.ai/skill.creation)
+* [Documentation](https://docs.mycroft.ai)
+* [Release Notes](https://github.com/MycroftAI/mycroft-core/releases)
+* [Mycroft Chat](https://chat.mycroft.ai)
+* [Mycroft Forum](https://community.mycroft.ai)
+* [Mycroft Blog](https://mycroft.ai/blog)
